@@ -25,8 +25,8 @@ _testmain.go
 
 *.txt
 *.txt.*
-foo.*
-*.bar
-LaTeX-report/.foo.tex.swp
-LaTeX-report/.foo.html.swp
-LaTeX-report/.foo.tex.swp
+foo.*.txt
+foo.*.txt.audit.json
+*.bar*.txt
+*.bar*.txt.audit.json
+.*.swp
