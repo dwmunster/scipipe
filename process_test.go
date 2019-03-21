@@ -92,3 +92,40 @@ func TestDontCreatePortInShellCommand(t *testing.T) {
 
 	cleanFiles("/tmp/foo.txt", "/tmp/footoo.txt")
 }
+
+func TestGlobOutputs(t *testing.T) {
+	wf := NewWorkflow("test_wf", 4)
+	cr := wf.NewProc("create_file", "touch {o:out}; for i in $(seq 1 1000); do echo ACGT >> {o:out}; done;")
+	cr.SetOut("foo", "/tmp/dna.fa")
+
+	sp := wf.NewProc("split", "split -d -l 100 {i:in} {i:in}.split_")
+	sp.SetOut("splits", "{i:in}.split_*")
+	sp.In("in").From(cr.Out("out"))
+
+	lc := wf.NewProc("lowercase", "cat {i:in} | tr [:upper:] [:lower:] > {o:out}")
+	lc.SetOut("out", "{i:in}.lc.fa")
+	lc.In("in").From(sp.Out("splits"))
+
+	expected := "acgt"
+	for _, filePath := range []string{"/tmp/dna.fa.split_00.lc.fa", "/tmp/dna.fa.split_09.lc.fa"} {
+		actual := readFile(filePath)
+		if actual != expected {
+			t.Errorf("File content of %s was not as expected (actual: %s) (expected: %s)", filePath, actual, expected)
+		}
+	}
+}
+
+func readFile(fileName string) (content string) {
+	f, openErr := os.Open(fileName)
+	if openErr != nil {
+		Error.Printf("Could not open file: %s\n", fileName)
+		return
+	}
+	b, readErr := ioutil.ReadAll(f)
+	if readErr != nil {
+		Error.Printf("Could not read file: %s\n", fileName)
+		return
+	}
+	content = string(b)
+	return
+}
