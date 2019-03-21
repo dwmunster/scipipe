@@ -243,7 +243,7 @@ func (p *Process) SetOut(outPortName string, pathPattern string) {
 			case "t":
 				replacement = t.Tag(phName)
 			default:
-				Fail("Replace failed for placeholder ", phName, " for path patterh '", path, "'")
+				Fail("Replace failed for placeholder ", phName, " for path pattern '", path, "'")
 			}
 
 			if len(restParts) > 0 {
