@@ -1,6 +1,7 @@
 package scipipe
 
 import (
+	"path/filepath"
 	"strconv"
 	"sync"
 )
@@ -124,6 +125,7 @@ type OutPort struct {
 	process     WorkflowProcess
 	RemotePorts map[string]*InPort
 	ready       bool
+	isGlobPort  bool // Whether this port is supposed to send files based on a glob pattern
 }
 
 // NewOutPort returns a new OutPort struct
@@ -202,6 +204,18 @@ func (pt *OutPort) Send(ip *FileIP) {
 	for _, rpt := range pt.RemotePorts {
 		Debug.Printf("Sending on out-port %s connected to in-port %s", pt.Name(), rpt.Name())
 		rpt.Send(ip)
+	}
+}
+
+// SendGlob globs an outpath glob pattern and sends all the files found with the glob pattern
+func (pt *OutPort) SendGlob(globPath string) {
+	ms, err := filepath.Glob(globPath)
+	if err != nil {
+		Failf("Could not glob pattern '%s': %v", globPath, err)
+	}
+	for _, m := range ms {
+		oip := NewFileIP(m)
+		pt.Send(oip)
 	}
 }
 

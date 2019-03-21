@@ -238,6 +238,9 @@ func (t *Task) Execute() {
 	finishTime := time.Now()
 	t.writeAuditLogs(startTime, finishTime)
 	t.atomizeIPs()
+
+	// Should glob files here, into t.OutIPs ... but that requires handling arrays of IPs, not just single IPs
+
 	t.workflow.DecConcurrentTasks(t.cores)
 
 	t.Done <- 1

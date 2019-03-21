@@ -214,6 +214,19 @@ func (p *Process) OutParam(portName string) *OutParamPort {
 // This allows to create out-ports for filenames that are created without explicitly
 // stating a filename on the commandline, such as when only submitting a prefix.
 func (p *Process) SetOut(outPortName string, pathPattern string) {
+	// Init the port
+	if _, ok := p.outPorts[outPortName]; !ok {
+		p.InitOutPort(p, outPortName)
+	}
+
+	// See https://golang.org/pkg/path/filepath/#Glob
+	if strings.Contains(pathPattern, "*") {
+		// Parse glob output
+		p.outPorts[outPortName].isGlobPort = true
+		return
+	}
+
+	// If this is a normal path pattern, set up the path formatter function
 	p.SetOutFunc(outPortName, func(t *Task) string {
 		path := pathPattern // Avoiding reusing the same variable in multiple instances of this func
 
@@ -230,6 +243,7 @@ func (p *Process) SetOut(outPortName string, pathPattern string) {
 			phName := parts[0]
 			restParts := parts[1:]
 
+			// Replace placeholder strings with actual values (paths, parameters)
 			switch phType {
 			case "i":
 				replacement = t.InPath(phName)
